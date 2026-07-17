@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Camera, CheckCircle2, XCircle, MapPin, CalendarDays, Building2, ClipboardCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle2, XCircle, MapPin, CalendarDays, Building2, ClipboardCheck, UserRound, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useStore } from '@/lib/store';
-import { OBJECT_STATUS, CHECK_STATUS, VEDOMSTVA, fmtDate, TODAY_STR } from '@/lib/meta';
+import { OBJECT_STATUS, CHECK_STATUS, VEDOMSTVA, DECISION_KINDS, DECISION_GROUPS, FUNDING_SOURCES, fmtDate, fmtMoney, TODAY_STR } from '@/lib/meta';
 import { MapStub } from '@/components/MapStub';
 import { Roadmap } from '@/components/Roadmap';
-import type { Check, Verdict } from '@/types';
+import type { Check, Verdict, DecisionKind, RegistryObject } from '@/types';
 
 export function ObjectCard({ id }: { id: string }) {
   const { objects, projects, navigate, role } = useStore();
@@ -83,6 +85,7 @@ export function ObjectCard({ id }: { id: string }) {
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div><dt className="text-muted-foreground text-xs">Тип работ</dt><dd className="font-medium">{obj.type}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Отрасль</dt><dd className="font-medium">{obj.industry}</dd></div>
+                <div><dt className="text-muted-foreground text-xs">Тип объекта</dt><dd className="font-medium">{obj.category}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Округ</dt><dd className="font-medium">{obj.district}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Источник</dt><dd className="font-medium">{obj.source === 'external' ? 'ИС «Геопортал МО»' : 'Ручное добавление'}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Дата поступления</dt><dd className="font-medium">{fmtDate(obj.incomingDate)}</dd></div>
@@ -192,6 +195,7 @@ function ChecksPanel({ objectId }: { objectId: string }) {
           </div>
         )
       )}
+      <DecisionPanel obj={obj} />
     </div>
   );
 }
@@ -322,5 +326,145 @@ function CompleteCheckForm({ objectId, check }: { objectId: string; check: Check
       </div>
       {!valid && <p className="text-[11px] text-muted-foreground">Для завершения заполните комментарий и выберите заключение.</p>}
     </div>
+  );
+}
+
+// ===== Решение по объекту: вид работ и финансирование =====
+function DecisionPanel({ obj }: { obj: RegistryObject }) {
+  const { role, setDecision } = useStore();
+  const [open, setOpen] = useState(false);
+  const d = obj.decision;
+  const canEdit = (role === 'coordinator' || role === 'manager') && !!obj.conclusion;
+
+  if (!obj.conclusion) return null;
+
+  if (!d) {
+    return (
+      <div className="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/50 p-5 text-center">
+        <p className="text-sm text-amber-800 mb-3">Итоговое заключение сформировано. Следующий шаг — оформить решение по объекту: вид работ и финансирование.</p>
+        {canEdit && (
+          <Button className="bg-[#B01E24] hover:bg-[#8f181d]" onClick={() => setOpen(true)}>
+            <Wallet className="w-4 h-4 mr-1.5" /> Оформить решение
+          </Button>
+        )}
+        <DecisionDialog obj={obj} open={open} onClose={() => setOpen(false)} onSubmit={setDecision} />
+      </div>
+    );
+  }
+
+  const dk = DECISION_KINDS[d.kind];
+  const usedPct = d.planFunding > 0 ? Math.round((d.usedFunding / d.planFunding) * 100) : 0;
+
+  return (
+    <div className="bg-white rounded-lg border p-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Wallet className="w-4 h-4 text-[#B01E24]" /> Решение по объекту
+        </h3>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={dk.group === 'save' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
+            {DECISION_GROUPS[dk.group].label}
+          </Badge>
+          <Badge variant="outline" style={{ color: dk.color, borderColor: dk.color + '55', background: dk.color + '14' }}>{dk.label}</Badge>
+          <span className="text-xs text-muted-foreground">от {fmtDate(d.date)}</span>
+          {canEdit && (
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setOpen(true)}>Изменить</Button>
+          )}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+        <div><dt className="text-muted-foreground text-xs">Источник финансирования</dt><dd className="font-medium">{d.source}</dd></div>
+        <div><dt className="text-muted-foreground text-xs">Плановое финансирование</dt><dd className="font-medium">{fmtMoney(d.planFunding)}</dd></div>
+        <div><dt className="text-muted-foreground text-xs">Освоено</dt><dd className="font-medium">{fmtMoney(d.usedFunding)}</dd></div>
+        <div><dt className="text-muted-foreground text-xs">Освоение</dt><dd className="font-medium">{usedPct}%</dd></div>
+      </div>
+      <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full bg-[#16a34a] rounded-full" style={{ width: `${usedPct}%` }} />
+      </div>
+      <DecisionDialog obj={obj} open={open} onClose={() => setOpen(false)} onSubmit={setDecision} />
+    </div>
+  );
+}
+
+function DecisionDialog({ obj, open, onClose, onSubmit }: {
+  obj: RegistryObject; open: boolean; onClose: () => void;
+  onSubmit: (objectId: string, d: { kind: DecisionKind; date: string; planFunding: number; usedFunding: number; source: string }) => void;
+}) {
+  const approved = obj.conclusion?.result === 'approved';
+  const allowedKinds = (Object.keys(DECISION_KINDS) as DecisionKind[])
+    .filter(k => approved ? DECISION_KINDS[k].group === 'save' : DECISION_KINDS[k].group === 'close');
+  const defaultKind: DecisionKind = approved
+    ? (obj.type === 'Строительство' ? 'construction' : obj.type === 'Ремонт' ? 'capital' : 'capital')
+    : 'transfer';
+
+  const [kind, setKind] = useState<DecisionKind>(obj.decision?.kind ?? defaultKind);
+  const [date, setDate] = useState(obj.decision?.date ?? TODAY_STR);
+  const [plan, setPlan] = useState(String(obj.decision?.planFunding ?? ''));
+  const [used, setUsed] = useState(String(obj.decision?.usedFunding ?? 0));
+  const [source, setSource] = useState(obj.decision?.source ?? FUNDING_SOURCES[0]);
+
+  const planN = parseFloat(plan.replace(',', '.'));
+  const usedN = parseFloat(used.replace(',', '.'));
+  const valid = !isNaN(planN) && planN > 0 && !isNaN(usedN) && usedN >= 0 && usedN <= planN && date;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Решение по объекту</DialogTitle>
+          <DialogDescription>
+            {approved
+              ? 'Объект согласован: выберите вид работ по сохранению объекта и укажите финансирование.'
+              : 'Работы отклонены: выберите решение по закрытию объекта (передача или снос).'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Вид решения *</Label>
+              <Select value={kind} onValueChange={v => setKind(v as DecisionKind)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allowedKinds.map(k => <SelectItem key={k} value={k}>{DECISION_KINDS[k].label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Дата решения *</Label>
+              <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Источник финансирования *</Label>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FUNDING_SOURCES.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Плановое финансирование, млн ₽ *</Label>
+              <Input value={plan} onChange={e => setPlan(e.target.value)} placeholder="Например: 180" />
+            </div>
+            <div>
+              <Label>Уже освоено, млн ₽</Label>
+              <Input value={used} onChange={e => setUsed(e.target.value)} />
+            </div>
+          </div>
+          {!valid && plan !== '' && (
+            <p className="text-[11px] text-red-600">Проверьте суммы: план больше нуля, освоено — не больше плана.</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Отмена</Button>
+          <Button disabled={!valid} className="bg-[#B01E24] hover:bg-[#8f181d]"
+            onClick={() => { onSubmit(obj.id, { kind, date, planFunding: planN, usedFunding: usedN, source }); onClose(); }}>
+            Сохранить решение
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

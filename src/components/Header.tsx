@@ -1,4 +1,4 @@
-import { Bell, Building2, FolderKanban, LayoutDashboard, UserRound, ClipboardList } from 'lucide-react';
+import { Bell, Building2, FolderKanban, LayoutDashboard, UserRound, ClipboardList, HardHat } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +15,7 @@ const NAV: { key: View['name']; label: string; icon: React.ElementType; roles: R
   { key: 'projects', label: 'Проекты', icon: FolderKanban, roles: ['coordinator', 'inspector', 'manager'] },
   { key: 'cabinet', label: 'Личный кабинет', icon: UserRound, roles: ['coordinator', 'inspector', 'manager'] },
   { key: 'dashboard', label: 'Общая картина', icon: LayoutDashboard, roles: ['coordinator', 'inspector', 'manager'] },
+  { key: 'works', label: 'Текущая работа', icon: HardHat, roles: ['coordinator', 'inspector', 'manager'] },
 ];
 
 export function Header() {

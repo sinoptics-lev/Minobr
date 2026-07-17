@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStore } from '@/lib/store';
-import { OBJECT_STATUS, INDUSTRIES, fmtDate } from '@/lib/meta';
+import { OBJECT_STATUS, INDUSTRIES, OBJECT_CATEGORIES, fmtDate } from '@/lib/meta';
 import type { ObjectStatus, ObjectType } from '@/types';
 
 const TYPE_OPTIONS: ObjectType[] = ['Строительство', 'Ремонт', 'Реконструкция'];
@@ -181,13 +181,14 @@ export function Registry() {
 // ===== Диалог ручного добавления объекта =====
 function AddObjectDialog({ open, onClose, onSubmit }: {
   open: boolean; onClose: () => void;
-  onSubmit: (d: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => void;
+  onSubmit: (d: { name: string; type: ObjectType; industry: string; category: string; district: string; address: string; coords: [number, number]; description: string }) => void;
 }) {
   const { objects } = useStore();
   const districts = [...new Set(objects.map(o => o.district))].sort();
   const [name, setName] = useState('');
   const [type, setType] = useState<ObjectType>('Строительство');
   const [industry, setIndustry] = useState(INDUSTRIES[0]);
+  const [category, setCategory] = useState(OBJECT_CATEGORIES[0]);
   const [district, setDistrict] = useState('');
   const [address, setAddress] = useState('');
   const [lat, setLat] = useState('55.75');
@@ -207,7 +208,7 @@ function AddObjectDialog({ open, onClose, onSubmit }: {
             <Label>Наименование объекта *</Label>
             <Input value={name} onChange={e => setName(e.target.value)} placeholder="Например: Школа № 3 — строительство пристройки" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Тип работ</Label>
               <Select value={type} onValueChange={v => setType(v as ObjectType)}>
@@ -220,6 +221,13 @@ function AddObjectDialog({ open, onClose, onSubmit }: {
               <Select value={industry} onValueChange={setIndustry}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Тип объекта</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{OBJECT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
@@ -252,7 +260,7 @@ function AddObjectDialog({ open, onClose, onSubmit }: {
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Отмена</Button>
           <Button disabled={!valid} className="bg-[#B01E24] hover:bg-[#8f181d]"
-            onClick={() => onSubmit({ name: name.trim(), type, industry, district: district.trim(), address: address.trim(), coords: [parseFloat(lat), parseFloat(lon)], description: description.trim() || 'Объект добавлен вручную.' })}>
+            onClick={() => onSubmit({ name: name.trim(), type, industry, category, district: district.trim(), address: address.trim(), coords: [parseFloat(lat), parseFloat(lon)], description: description.trim() || 'Объект добавлен вручную.' })}>
             Добавить в реестр
           </Button>
         </DialogFooter>
