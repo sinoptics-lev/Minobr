@@ -1,0 +1,325 @@
+import { useState } from 'react';
+import { ArrowLeft, Camera, CheckCircle2, XCircle, MapPin, CalendarDays, Building2, ClipboardCheck, UserRound } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { useStore } from '@/lib/store';
+import { OBJECT_STATUS, CHECK_STATUS, VEDOMSTVA, fmtDate, TODAY_STR } from '@/lib/meta';
+import { MapStub } from '@/components/MapStub';
+import { Roadmap } from '@/components/Roadmap';
+import type { Check, Verdict } from '@/types';
+
+export function ObjectCard({ id }: { id: string }) {
+  const { objects, projects, navigate, role } = useStore();
+  const obj = objects.find(o => o.id === id);
+  if (!obj) {
+    return (
+      <div className="bg-white rounded-lg border p-10 text-center">
+        <p className="text-muted-foreground">Объект не найден.</p>
+        <Button variant="link" onClick={() => navigate({ name: 'registry' })}>Вернуться к реестру</Button>
+      </div>
+    );
+  }
+  const st = OBJECT_STATUS[obj.status];
+  const project = projects.find(p => p.id === obj.projectId);
+  const doneChecks = obj.checks.filter(c => c.status === 'done').length;
+
+  return (
+    <div className="space-y-4">
+      <button onClick={() => navigate({ name: 'registry' })}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-[#B01E24]">
+        <ArrowLeft className="w-4 h-4" /> Реестр объектов
+      </button>
+
+      {/* Шапка объекта */}
+      <div className="bg-white rounded-lg border p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={st.className}>{st.label}</Badge>
+              <Badge variant="outline">{obj.type}</Badge>
+              <Badge variant="outline">{obj.industry}</Badge>
+              <Badge variant="outline" className="text-slate-600">
+                {obj.source === 'external' ? 'поступил из внешней ИС' : 'добавлен вручную'}
+              </Badge>
+              {project && (
+                <Badge className="bg-[#B01E24] hover:bg-[#8f181d] cursor-pointer" onClick={() => navigate({ name: 'project', id: project.id })}>
+                  Проект: {project.name}
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-xl font-bold text-[#1f2937]">{obj.name}</h1>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {obj.address}</span>
+              <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" /> поступил {fmtDate(obj.incomingDate)}</span>
+              <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" /> ID {obj.id}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Tabs defaultValue="checks">
+        <TabsList>
+          <TabsTrigger value="info">Сведения и карта</TabsTrigger>
+          <TabsTrigger value="checks">
+            Проверки и заключение
+            {obj.checks.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{doneChecks}/{obj.checks.length}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="roadmap">Дорожная карта</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="info" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg border p-5 space-y-3">
+              <h3 className="font-semibold">Описание</h3>
+              <p className="text-sm leading-relaxed text-slate-700">{obj.description}</p>
+              <Separator />
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div><dt className="text-muted-foreground text-xs">Тип работ</dt><dd className="font-medium">{obj.type}</dd></div>
+                <div><dt className="text-muted-foreground text-xs">Отрасль</dt><dd className="font-medium">{obj.industry}</dd></div>
+                <div><dt className="text-muted-foreground text-xs">Источник</dt><dd className="font-medium">{obj.source === 'external' ? 'ИС «Геопортал МО»' : 'Ручное добавление'}</dd></div>
+                <div><dt className="text-muted-foreground text-xs">Дата поступления</dt><dd className="font-medium">{fmtDate(obj.incomingDate)}</dd></div>
+              </dl>
+            </div>
+            <div className="bg-white rounded-lg border p-5 space-y-3">
+              <h3 className="font-semibold">Местоположение</h3>
+              <MapStub coords={obj.coords} address={obj.address} />
+              <p className="text-xs text-muted-foreground">Координаты установлены при геоанализе во внешней информационной системе.</p>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="checks" className="mt-4">
+          <ChecksPanel objectId={obj.id} />
+        </TabsContent>
+
+        <TabsContent value="roadmap" className="mt-4">
+          <Roadmap objectId={obj.id} />
+          {role === 'inspector' && (
+            <p className="text-xs text-muted-foreground mt-2">Добавление задач доступно координатору и руководителю; смена статуса — ответственному исполнителю.</p>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// ===== Блок проверок и итогового заключения =====
+function ChecksPanel({ objectId }: { objectId: string }) {
+  const { objects, role, assignVedomstva } = useStore();
+  const obj = objects.find(o => o.id === objectId)!;
+  const [picked, setPicked] = useState<string[]>([]);
+
+  // Новый объект: координатор назначает ведомства
+  if (obj.status === 'new') {
+    if (role !== 'coordinator') {
+      return (
+        <div className="bg-white rounded-lg border p-10 text-center text-sm text-muted-foreground">
+          Объект ожидает рассмотрения ответственным сотрудником отраслевого ведомства (координатором).
+        </div>
+      );
+    }
+    return (
+      <div className="bg-white rounded-lg border p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold">Рассмотрение объекта: назначение проверок</h3>
+          <p className="text-sm text-muted-foreground">Выберите ведомства, которые должны провести выездные проверки объекта. Ответственные сотрудники получат уведомления.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {VEDOMSTVA.map(v => (
+            <label key={v.name} className={`flex items-center gap-2.5 border rounded-lg p-3 cursor-pointer transition-colors ${picked.includes(v.name) ? 'border-[#B01E24] bg-red-50/50' : 'hover:bg-slate-50'}`}>
+              <Checkbox checked={picked.includes(v.name)}
+                onCheckedChange={() => setPicked(picked.includes(v.name) ? picked.filter(x => x !== v.name) : [...picked, v.name])} />
+              <div>
+                <div className="text-sm font-medium">{v.name}</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1"><UserRound className="w-3 h-3" /> {v.person}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <Button disabled={picked.length === 0} className="bg-[#B01E24] hover:bg-[#8f181d]"
+            onClick={() => { assignVedomstva(objectId, picked); setPicked([]); }}>
+            <ClipboardCheck className="w-4 h-4 mr-1.5" />
+            Назначить проверки ({picked.length})
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {obj.checks.map(c => (
+          <CheckCard key={c.id} objectId={objectId} check={c} />
+        ))}
+      </div>
+
+      {/* Итоговое заключение */}
+      {obj.conclusion ? (
+        <div className={`rounded-lg border-2 p-5 ${obj.conclusion.result === 'approved' ? 'border-green-300 bg-green-50/60' : 'border-red-300 bg-red-50/60'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            {obj.conclusion.result === 'approved'
+              ? <CheckCircle2 className="w-5 h-5 text-green-700" />
+              : <XCircle className="w-5 h-5 text-red-700" />}
+            <h3 className="font-semibold">
+              Итоговое заключение: {obj.conclusion.result === 'approved' ? 'работы согласованы' : 'работы отклонены'}
+            </h3>
+            <span className="text-sm text-muted-foreground ml-auto">{fmtDate(obj.conclusion.date)}</span>
+          </div>
+          <p className="text-sm leading-relaxed">{obj.conclusion.text}</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {obj.checks.map(c => (
+              <Badge key={c.id} variant="outline" className={c.verdict === 'agree' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
+                {c.vedomstvo}: {c.verdict === 'agree' ? 'согласовано' : 'отклонено'}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      ) : (
+        obj.checks.length > 0 && (
+          <div className="bg-white rounded-lg border p-4 text-sm text-muted-foreground">
+            Итоговое заключение будет сформировано автоматически после завершения проверок всеми назначенными ведомствами
+            ({obj.checks.filter(c => c.status === 'done').length} из {obj.checks.length} завершено).
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+// ===== Карточка проверки одного ведомства =====
+function CheckCard({ objectId, check }: { objectId: string; check: Check }) {
+  const { role, vedomstvo } = useStore();
+  const st = CHECK_STATUS[check.status];
+  const mine = role === 'inspector' && check.vedomstvo === vedomstvo;
+
+  return (
+    <div className={`bg-white rounded-lg border p-4 space-y-3 ${mine && check.status !== 'done' ? 'ring-1 ring-[#B01E24]/40' : ''}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <div className="font-semibold text-sm">{check.vedomstvo}</div>
+          <div className="text-xs text-muted-foreground">Ответственный: {check.assignee}</div>
+        </div>
+        <Badge variant="outline" className={st.className}>{st.label}</Badge>
+      </div>
+
+      {check.status === 'pending' && mine && <StartCheckForm objectId={objectId} checkId={check.id} />}
+      {check.status === 'in_progress' && mine && <CompleteCheckForm objectId={objectId} check={check} />}
+
+      {check.status === 'pending' && !mine && (
+        <p className="text-xs text-muted-foreground">Ожидает выезда ответственного сотрудника ведомства.</p>
+      )}
+      {check.status === 'in_progress' && !mine && (
+        <p className="text-xs text-muted-foreground">Проверка проводится{check.visitDate ? `, дата выезда: ${fmtDate(check.visitDate)}` : ''}.</p>
+      )}
+
+      {check.status === 'done' && (
+        <div className="space-y-2.5">
+          <div className="text-xs text-muted-foreground">Выезд: {fmtDate(check.visitDate)} · заключение: {fmtDate(check.doneDate)}</div>
+          {check.photos.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {check.photos.map(p => (
+                <div key={p.id} className="w-24">
+                  <div className="w-24 h-16 rounded bg-gradient-to-br from-slate-200 to-slate-300 border flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-slate-500" />
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{p.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {check.comment && <p className="text-sm bg-slate-50 rounded p-2.5 leading-relaxed">{check.comment}</p>}
+          <Badge variant="outline" className={check.verdict === 'agree' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
+            {check.verdict === 'agree' ? 'Необходимость работ согласована' : 'В работах отказано'}
+          </Badge>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Регистрация выезда
+function StartCheckForm({ objectId, checkId }: { objectId: string; checkId: string }) {
+  const { startCheck } = useStore();
+  const [date, setDate] = useState(TODAY_STR);
+  return (
+    <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-3 space-y-2">
+      <Label className="text-xs">Дата выезда на объект</Label>
+      <div className="flex gap-2">
+        <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="h-8 text-sm" />
+        <Button size="sm" className="h-8 bg-[#B01E24] hover:bg-[#8f181d]" onClick={() => startCheck(objectId, checkId, date)}>
+          Начать проверку
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Форма результата проверки
+function CompleteCheckForm({ objectId, check }: { objectId: string; check: Check }) {
+  const { completeCheck } = useStore();
+  const [visitDate, setVisitDate] = useState(check.visitDate ?? TODAY_STR);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [comment, setComment] = useState('');
+  const [verdict, setVerdict] = useState<Verdict | ''>('');
+  const valid = comment.trim().length >= 10 && verdict !== '' && visitDate;
+
+  const addPhoto = () => setPhotos(prev => [...prev, `Фото ${prev.length + 1} — ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`]);
+
+  return (
+    <div className="border border-amber-200 bg-amber-50/50 rounded-lg p-3 space-y-3">
+      <div className="grid grid-cols-2 gap-3 items-end">
+        <div>
+          <Label className="text-xs">Дата выезда</Label>
+          <Input type="date" value={visitDate} onChange={e => setVisitDate(e.target.value)} className="h-8 text-sm" />
+        </div>
+        <Button type="button" variant="outline" size="sm" className="h-8" onClick={addPhoto}>
+          <Camera className="w-3.5 h-3.5 mr-1" /> Добавить фото ({photos.length})
+        </Button>
+      </div>
+      {photos.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          {photos.map((p, i) => (
+            <div key={i} className="w-20">
+              <div className="w-20 h-14 rounded bg-gradient-to-br from-slate-200 to-slate-300 border flex items-center justify-center">
+                <Camera className="w-4 h-4 text-slate-500" />
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{p}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div>
+        <Label className="text-xs">Комментарий о выезде *</Label>
+        <Textarea rows={3} value={comment} onChange={e => setComment(e.target.value)}
+          placeholder="Состояние объекта, выявленные замечания, обоснование заключения… (не менее 10 символов)" />
+      </div>
+      <div>
+        <Label className="text-xs">Заключение *</Label>
+        <RadioGroup className="flex gap-4 mt-1" value={verdict} onValueChange={v => setVerdict(v as Verdict)}>
+          <label className={`flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer text-sm ${verdict === 'agree' ? 'border-green-500 bg-green-50' : ''}`}>
+            <RadioGroupItem value="agree" /> Согласовать необходимость работ
+          </label>
+          <label className={`flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer text-sm ${verdict === 'reject' ? 'border-red-500 bg-red-50' : ''}`}>
+            <RadioGroupItem value="reject" /> Отклонить
+          </label>
+        </RadioGroup>
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" disabled={!valid} className="bg-[#B01E24] hover:bg-[#8f181d]"
+          onClick={() => completeCheck(objectId, check.id, { visitDate, photos, comment: comment.trim(), verdict: verdict as Verdict })}>
+          Завершить проверку
+        </Button>
+      </div>
+      {!valid && <p className="text-[11px] text-muted-foreground">Для завершения заполните комментарий и выберите заключение.</p>}
+    </div>
+  );
+}
