@@ -7,6 +7,7 @@ import { Projects, ProjectCard } from '@/components/Projects'
 import { Cabinet } from '@/components/Cabinet'
 import { Dashboard } from '@/components/Dashboard'
 import { WorksDashboard } from '@/components/WorksDashboard'
+import { AboutPage } from '@/components/AboutPage'
 
 function Shell() {
   const { view } = useStore()
@@ -21,6 +22,7 @@ function Shell() {
         {view.name === 'cabinet' && <Cabinet />}
         {view.name === 'dashboard' && <Dashboard />}
         {view.name === 'works' && <WorksDashboard />}
+        {view.name === 'about' && <AboutPage />}
       </main>
       <footer className="border-t bg-white mt-6">
         <div className="max-w-[1400px] mx-auto px-4 py-3 text-xs text-muted-foreground flex justify-between">
