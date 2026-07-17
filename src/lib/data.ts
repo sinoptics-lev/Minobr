@@ -190,7 +190,7 @@ export const DEMO_TASKS: RoadmapTask[] = [
   { id: 't-05', objectId: 'obj-004', title: 'Ввод объекта в эксплуатацию', assignee: 'Смирнова А.В.', vedomstvo: 'Минстрой МО', planStart: '2026-08-26', planEnd: '2026-08-31', status: 'not_started' },
   // Школа № 7
   { id: 't-06', objectId: 'obj-005', title: 'Согласование схемы перевода учащихся', assignee: 'Петров И.С.', vedomstvo: 'Минобразования МО', planStart: '2026-06-01', planEnd: '2026-06-30', factStart: '2026-06-05', status: 'in_progress' },
-  { id: 't-07', objectId: 'obj-005', title: 'Перевод учащихся в школу № 5', assignee: 'Петров И.С.', vedomство: 'Минобразования МО', planStart: '2026-08-26', planEnd: '2026-09-01', status: 'not_started' },
+  { id: 't-07', objectId: 'obj-005', title: 'Перевод учащихся в школу № 5', assignee: 'Петров И.С.', vedomstvo: 'Минобразования МО', planStart: '2026-08-26', planEnd: '2026-09-01', status: 'not_started' },
   { id: 't-08', objectId: 'obj-005', title: 'Инвентаризация имущества школы № 7', assignee: 'Лебедева О.В.', vedomstvo: 'Минимущество МО', planStart: '2026-07-20', planEnd: '2026-08-15', status: 'not_started' },
   { id: 't-09', objectId: 'obj-005', title: 'Передача здания на баланс Минимущества МО', assignee: 'Лебедева О.В.', vedomstvo: 'Минимущество МО', planStart: '2026-09-05', planEnd: '2026-09-30', status: 'not_started' },
   // Больница Коломна
