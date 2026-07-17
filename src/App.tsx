@@ -6,6 +6,7 @@ import { ObjectCard } from '@/components/ObjectCard'
 import { Projects, ProjectCard } from '@/components/Projects'
 import { Cabinet } from '@/components/Cabinet'
 import { Dashboard } from '@/components/Dashboard'
+import { WorksDashboard } from '@/components/WorksDashboard'
 
 function Shell() {
   const { view } = useStore()
@@ -19,6 +20,7 @@ function Shell() {
         {view.name === 'project' && <ProjectCard id={view.id} />}
         {view.name === 'cabinet' && <Cabinet />}
         {view.name === 'dashboard' && <Dashboard />}
+        {view.name === 'works' && <WorksDashboard />}
       </main>
       <footer className="border-t bg-white mt-6">
         <div className="max-w-[1400px] mx-auto px-4 py-3 text-xs text-muted-foreground flex justify-between">

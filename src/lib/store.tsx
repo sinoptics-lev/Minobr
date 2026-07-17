@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
-import type { RegistryObject, RoadmapTask, Project, NotificationItem, Role, View, Verdict, ObjectType } from '@/types';
+import type { RegistryObject, RoadmapTask, Project, NotificationItem, Role, View, Verdict, ObjectType, Decision } from '@/types';
 import { DEMO_OBJECTS, DEMO_TASKS, DEMO_PROJECTS, DEMO_NOTIFICATIONS } from '@/lib/data';
 import { uid, personOf, TODAY_STR, TODAY } from '@/lib/meta';
 
@@ -18,7 +18,8 @@ interface Store {
   assignVedomstva: (objectId: string, vedomstva: string[]) => void;
   startCheck: (objectId: string, checkId: string, visitDate: string) => void;
   completeCheck: (objectId: string, checkId: string, data: { visitDate: string; photos: string[]; comment: string; verdict: Verdict }) => void;
-  addObject: (data: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => string;
+  addObject: (data: { name: string; type: ObjectType; industry: string; category: string; district: string; address: string; coords: [number, number]; description: string }) => string;
+  setDecision: (objectId: string, decision: Decision) => void;
   addTask: (task: Omit<RoadmapTask, 'id' | 'status'>) => void;
   setTaskStatus: (taskId: string, action: 'start' | 'finish' | 'reset') => void;
   createProject: (name: string, description: string, objectIds: string[]) => void;
@@ -115,13 +116,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [objects, push]);
 
   // Ручное добавление объекта
-  const addObject = useCallback((data: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => {
+  const addObject = useCallback((data: { name: string; type: ObjectType; industry: string; category: string; district: string; address: string; coords: [number, number]; description: string }) => {
     const id = 'obj-' + uid();
     setObjects(prev => [{
       id, ...data, source: 'manual' as const, incomingDate: TODAY_STR, status: 'new' as const, checks: [],
     }, ...prev]);
     push([notify(`Объект «${data.name}» добавлен вручную и ожидает рассмотрения`, 'object', ['coordinator'], id)]);
     return id;
+  }, [push]);
+
+  // Оформление решения по объекту после итогового заключения
+  const setDecision = useCallback((objectId: string, decision: Decision) => {
+    let objName = '';
+    setObjects(prev => prev.map(o => {
+      if (o.id !== objectId) return o;
+      objName = o.name;
+      return { ...o, decision };
+    }));
+    push([notify(`По объекту «${objName}» оформлено решение: финансирование ${decision.planFunding} млн ₽`, 'object', ['manager', 'coordinator'], objectId)]);
   }, [push]);
 
   const addTask = useCallback((task: Omit<RoadmapTask, 'id' | 'status'>) => {
@@ -152,9 +164,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(() => ({
     role, setRole, vedomstvo, setVedomstvo, view, navigate,
     objects, tasks, projects, notifications,
-    assignVedomstva, startCheck, completeCheck, addObject, addTask, setTaskStatus,
+    assignVedomstva, startCheck, completeCheck, addObject, setDecision, addTask, setTaskStatus,
     createProject, markAllRead, markRead,
-  }), [role, vedomstvo, view, objects, tasks, projects, notifications, navigate, assignVedomstva, startCheck, completeCheck, addObject, addTask, setTaskStatus, createProject, markAllRead, markRead]);
+  }), [role, vedomstvo, view, objects, tasks, projects, notifications, navigate, assignVedomstva, startCheck, completeCheck, addObject, setDecision, addTask, setTaskStatus, createProject, markAllRead, markRead]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
