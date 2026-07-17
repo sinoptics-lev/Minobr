@@ -108,4 +108,5 @@ export type View =
   | { name: 'project'; id: string }
   | { name: 'cabinet' }
   | { name: 'dashboard' }
-  | { name: 'works' };
+  | { name: 'works' }
+  | { name: 'about' };

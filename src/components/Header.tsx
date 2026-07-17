@@ -1,4 +1,4 @@
-import { Bell, Building2, FolderKanban, LayoutDashboard, UserRound, ClipboardList, HardHat } from 'lucide-react';
+import { Bell, Building2, FolderKanban, LayoutDashboard, UserRound, ClipboardList, HardHat, CircleHelp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -42,6 +42,11 @@ export function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Информация о системе */}
+          <Button variant="outline" size="sm" className="h-9 mt-3" onClick={() => navigate({ name: 'about' })}>
+            <CircleHelp className="w-4 h-4 mr-1.5" /> О системе
+          </Button>
+
           {/* Переключатель роли */}
           <div className="flex flex-col">
             <span className="text-[10px] text-muted-foreground px-1">Роль пользователя</span>
