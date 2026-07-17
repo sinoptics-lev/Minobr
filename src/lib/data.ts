@@ -447,7 +447,7 @@ export const DEMO_TASKS: RoadmapTask[] = [
   // Школа № 9
   { id: 't-21', objectId: 'obj-015', title: 'Проектная документация', assignee: 'Волков П.Н.', vedomstvo: 'Минстрой МО', planStart: '2026-06-09', planEnd: '2026-06-30', factStart: '2026-06-09', factEnd: '2026-07-02', status: 'done' },
   { id: 't-22', objectId: 'obj-015', title: 'Торги и контрактация', assignee: 'Смирнова А.В.', vedomstvo: 'Минстрой МО', planStart: '2026-07-01', planEnd: '2026-07-25', factStart: '2026-07-03', status: 'in_progress' },
-  { id: 't-23', objectId: 'obj-015', title: 'Ремонтные работы', assignee: 'Волков П.Н.', vedomство: 'Минстрой МО', planStart: '2026-07-26', planEnd: '2026-08-31', status: 'not_started' },
+  { id: 't-23', objectId: 'obj-015', title: 'Ремонтные работы', assignee: 'Волков П.Н.', vedomstvo: 'Минстрой МО', planStart: '2026-07-26', planEnd: '2026-08-31', status: 'not_started' },
   // ДК «Родина»
   { id: 't-24', objectId: 'obj-017', title: 'Реставрационный проект', assignee: 'Зайцева Л.Д.', vedomstvo: 'Минкультуры МО', planStart: '2026-07-04', planEnd: '2026-08-20', status: 'not_started' },
   { id: 't-25', objectId: 'obj-017', title: 'Согласование проекта в Минкультуры МО', assignee: 'Зайцева Л.Д.', vedomstvo: 'Минкультуры МО', planStart: '2026-07-04', planEnd: '2026-07-30', factStart: '2026-07-06', status: 'in_progress' },
