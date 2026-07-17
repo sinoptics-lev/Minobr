@@ -24,6 +24,7 @@ export interface Check {
   vedomstvo: string;        // ведомство, проводящее проверку
   assignee: string;         // ответственный сотрудник ведомства
   status: CheckStatus;
+  assignedDate?: string;    // дата назначения проверки
   visitDate?: string;       // дата выезда
   photos: CheckPhoto[];
   comment?: string;         // комментарий о выезде
@@ -42,6 +43,7 @@ export interface RegistryObject {
   name: string;
   type: ObjectType;
   industry: string;          // отрасль
+  district: string;          // муниципальный округ
   address: string;
   coords: [number, number];  // широта, долгота
   source: 'external' | 'manual'; // поступил из внешней ИС / добавлен вручную

@@ -18,7 +18,7 @@ interface Store {
   assignVedomstva: (objectId: string, vedomstva: string[]) => void;
   startCheck: (objectId: string, checkId: string, visitDate: string) => void;
   completeCheck: (objectId: string, checkId: string, data: { visitDate: string; photos: string[]; comment: string; verdict: Verdict }) => void;
-  addObject: (data: { name: string; type: ObjectType; industry: string; address: string; coords: [number, number]; description: string }) => string;
+  addObject: (data: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => string;
   addTask: (task: Omit<RoadmapTask, 'id' | 'status'>) => void;
   setTaskStatus: (taskId: string, action: 'start' | 'finish' | 'reset') => void;
   createProject: (name: string, description: string, objectIds: string[]) => void;
@@ -61,7 +61,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (o.id !== objectId) return o;
       const newChecks = vedomstva
         .filter(v => !o.checks.some(c => c.vedomstvo === v))
-        .map(v => ({ id: uid(), vedomstvo: v, assignee: personOf(v), status: 'pending' as const, photos: [] }));
+        .map(v => ({ id: uid(), vedomstvo: v, assignee: personOf(v), status: 'pending' as const, assignedDate: TODAY_STR, photos: [] }));
       return { ...o, status: 'checking' as const, checks: [...o.checks, ...newChecks] };
     }));
     const obj = objects.find(o => o.id === objectId);
@@ -115,7 +115,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [objects, push]);
 
   // Ручное добавление объекта
-  const addObject = useCallback((data: { name: string; type: ObjectType; industry: string; address: string; coords: [number, number]; description: string }) => {
+  const addObject = useCallback((data: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => {
     const id = 'obj-' + uid();
     setObjects(prev => [{
       id, ...data, source: 'manual' as const, incomingDate: TODAY_STR, status: 'new' as const, checks: [],
