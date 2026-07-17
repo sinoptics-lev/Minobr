@@ -1,4 +1,4 @@
-import type { ObjectStatus, TaskStatus, CheckStatus, Role, RoadmapTask } from '@/types';
+import type { ObjectStatus, TaskStatus, CheckStatus, Role, RoadmapTask, DecisionKind } from '@/types';
 
 export const TODAY = new Date('2026-07-17T12:00:00');
 export const TODAY_STR = '2026-07-17';
@@ -95,5 +95,36 @@ export const taskStatusLabel = (t: RoadmapTask) =>
 export const PROJECT_COLORS = ['#B01E24', '#1d4ed8', '#047857', '#a16207', '#7c3aed', '#0e7490'];
 
 export const INDUSTRIES = ['Образование', 'Здравоохранение', 'Спорт', 'Культура', 'Транспорт'];
+
+// ===== Типы объектов =====
+export const OBJECT_CATEGORIES = ['Школа', 'Детский сад', 'Поликлиника', 'Больница', 'ФАП', 'Дом культуры', 'Стадион', 'ФОК'];
+
+// ===== Решения по объектам =====
+export type DecisionGroup = 'save' | 'close';
+
+export const DECISION_KINDS: Record<DecisionKind, { label: string; group: DecisionGroup; color: string }> = {
+  construction: { label: 'Строительство', group: 'save', color: '#1d4ed8' },
+  capital: { label: 'Капитальный ремонт', group: 'save', color: '#7c3aed' },
+  current: { label: 'Текущий ремонт', group: 'save', color: '#0e7490' },
+  transfer: { label: 'Передача', group: 'close', color: '#a16207' },
+  demolition: { label: 'Снос', group: 'close', color: '#dc2626' },
+};
+
+export const DECISION_GROUPS: Record<DecisionGroup, { label: string; color: string }> = {
+  save: { label: 'Сохранение', color: '#16a34a' },
+  close: { label: 'Закрытие', color: '#dc2626' },
+};
+
+export const FUNDING_SOURCES = [
+  'Бюджет Московской области',
+  'Муниципальный бюджет',
+  'Федеральный и областной бюджеты',
+];
+
+/** Форматирование сумм: до 1 млрд — в млн, свыше — в млрд руб. */
+export const fmtMoney = (mln: number) =>
+  mln >= 1000
+    ? `${(mln / 1000).toFixed(2).replace('.', ',').replace(',00', '')} млрд ₽`
+    : `${Math.round(mln)} млн ₽`;
 
 export const uid = () => Math.random().toString(36).slice(2, 10);

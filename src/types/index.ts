@@ -38,11 +38,23 @@ export interface Conclusion {
   date: string;
 }
 
+/** Вид решения по объекту: сохранение (construction/capital/current) или закрытие (transfer/demolition) */
+export type DecisionKind = 'construction' | 'capital' | 'current' | 'transfer' | 'demolition';
+
+export interface Decision {
+  kind: DecisionKind;
+  date: string;           // дата оформления решения
+  planFunding: number;    // плановое финансирование, млн руб.
+  usedFunding: number;    // освоено, млн руб.
+  source: string;         // источник финансирования
+}
+
 export interface RegistryObject {
   id: string;
   name: string;
   type: ObjectType;
   industry: string;          // отрасль
+  category: string;          // тип объекта: школа, детский сад, поликлиника…
   district: string;          // муниципальный округ
   address: string;
   coords: [number, number];  // широта, долгота
@@ -52,6 +64,7 @@ export interface RegistryObject {
   status: ObjectStatus;
   checks: Check[];
   conclusion?: Conclusion;
+  decision?: Decision;       // решение по объекту (после итогового заключения)
   projectId?: string;
 }
 
@@ -94,4 +107,5 @@ export type View =
   | { name: 'projects' }
   | { name: 'project'; id: string }
   | { name: 'cabinet' }
-  | { name: 'dashboard' };
+  | { name: 'dashboard' }
+  | { name: 'works' };
