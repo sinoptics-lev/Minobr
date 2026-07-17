@@ -8,10 +8,9 @@ import {
   INDUSTRIES, OBJECT_CATEGORIES, DECISION_KINDS, DECISION_GROUPS,
   fmtDate, fmtMoney, isOverdue,
 } from '@/lib/meta';
-import type { DecisionKind, ObjectType, RoadmapTask } from '@/types';
+import type { DecisionKind, RegistryObject, RoadmapTask } from '@/types';
 
 const KINDS = Object.keys(DECISION_KINDS) as DecisionKind[];
-const TYPE_OPTIONS: ObjectType[] = ['Строительство', 'Ремонт', 'Реконструкция'];
 
 const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
 
@@ -25,6 +24,7 @@ export function WorksDashboard() {
   const [fCategory, setFCategory] = useState('all');
   const [fDistrict, setFDistrict] = useState('all');
   const [fIndustry, setFIndustry] = useState('all');
+  const [selKind, setSelKind] = useState<DecisionKind | null>(null);
 
   const districts = useMemo(() => [...new Set(objects.map(o => o.district))].sort(), [objects]);
 
@@ -88,33 +88,23 @@ export function WorksDashboard() {
   }, [scope]);
   const maxSourcePlan = Math.max(...bySource.map(s => s.plan), 1);
 
-  // ===== Матрица: типы работ × решения =====
-  const matrix = useMemo(() => TYPE_OPTIONS.map(t => ({
-    type: t,
-    cells: KINDS.map(k => {
-      const list = scope.filter(o => o.type === t && o.decision!.kind === k);
-      return { count: list.length, plan: list.reduce((a, o) => a + o.decision!.planFunding, 0) };
-    }),
-    total: scope.filter(o => o.type === t).length,
-  })), [scope]);
+  // ===== Типы объектов (детализация по выбранному виду решения) =====
+  const detailScope = useMemo(() => selKind ? scope.filter(o => o.decision!.kind === selKind) : scope, [scope, selKind]);
 
-  // ===== Типы объектов =====
   const byCategory = useMemo(() => OBJECT_CATEGORIES
     .map(c => {
-      const list = scope.filter(o => o.category === c);
+      const list = detailScope.filter(o => o.category === c);
       if (list.length === 0) return null;
       const tks = list.flatMap(o => tasksOf.get(o.id) ?? []);
       return {
-        name: c, total: list.length,
-        save: list.filter(o => DECISION_KINDS[o.decision!.kind].group === 'save').length,
-        close: list.length - list.filter(o => DECISION_KINDS[o.decision!.kind].group === 'save').length,
+        name: c, total: list.length, objs: list,
         plan: list.reduce((a, o) => a + o.decision!.planFunding, 0),
         used: list.reduce((a, o) => a + o.decision!.usedFunding, 0),
         ready: readiness(tks),
       };
     })
     .filter(Boolean)
-    .sort((a: any, b: any) => b.plan - a.plan) as any[], [scope, tasksOf]);
+    .sort((a: any, b: any) => b.plan - a.plan) as any[], [detailScope, tasksOf]);
 
   // ===== Муниципалитеты =====
   const byDistrict = useMemo(() => districts
@@ -218,7 +208,8 @@ export function WorksDashboard() {
       {/* Решения + финансирование */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-lg border p-5">
-          <h3 className="font-semibold text-sm mb-4">Решения по объектам</h3>
+          <h3 className="font-semibold text-sm mb-1">Решения по объектам</h3>
+          <p className="text-[11px] text-muted-foreground mb-3">нажмите на вид решения — ниже откроется детализация по типам объектов</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {(['save', 'close'] as const).map(g => {
               const gObjs = scope.filter(o => DECISION_KINDS[o.decision!.kind].group === g);
@@ -237,7 +228,10 @@ export function WorksDashboard() {
                   </div>
                   <div className="space-y-2.5">
                     {byKind.filter(k => DECISION_KINDS[k.kind].group === g).map(k => (
-                      <div key={k.kind}>
+                      <div key={k.kind}
+                        className={`rounded-md px-2 py-1.5 -mx-2 -my-1 transition-colors ${k.list.length === 0 ? 'opacity-50' : 'cursor-pointer'} ${selKind === k.kind ? 'bg-white' : k.list.length > 0 ? 'hover:bg-white/70' : ''}`}
+                        style={selKind === k.kind ? { boxShadow: `0 0 0 2px ${DECISION_KINDS[k.kind].color}` } : undefined}
+                        onClick={() => k.list.length > 0 && setSelKind(selKind === k.kind ? null : k.kind)}>
                         <div className="flex justify-between text-xs mb-1">
                           <span className="font-medium flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-sm" style={{ background: DECISION_KINDS[k.kind].color }} />
@@ -296,66 +290,66 @@ export function WorksDashboard() {
         </div>
       </div>
 
-      {/* Типы работ × решения + типы объектов */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-lg border overflow-hidden">
-          <div className="px-5 py-3.5 border-b bg-slate-50/60">
-            <h3 className="font-semibold text-sm">Типы работ по решениям</h3>
-          </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-xs text-slate-500 uppercase tracking-wide">
-                <th className="p-3">Тип работ (заявка)</th>
-                {KINDS.map(k => <th key={k} className="p-3 text-center">{DECISION_KINDS[k].label}</th>)}
-                <th className="p-3 text-center w-[80px]">Итого</th>
-              </tr>
-            </thead>
-            <tbody>
-              {matrix.map(r => (
-                <tr key={r.type} className="border-b last:border-0">
-                  <td className="p-3 font-medium">{r.type}</td>
-                  {r.cells.map((c, i) => (
-                    <td key={i} className="p-3 text-center">
-                      {c.count === 0 ? <span className="text-slate-300">—</span> : (
-                        <div>
-                          <div className="font-semibold" style={{ color: DECISION_KINDS[KINDS[i]].color }}>{c.count}</div>
-                          <div className="text-[10px] text-muted-foreground">{fmtMoney(c.plan)}</div>
-                        </div>
-                      )}
-                    </td>
-                  ))}
-                  <td className="p-3 text-center font-bold">{r.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="px-5 py-2.5 border-t text-[11px] text-muted-foreground">
-            В ячейках: количество объектов и плановое финансирование. Решение «закрытие» (передача, снос) возможно и по согласованным заявкам — например, передача здания после перевода учащихся.
-          </div>
+      {/* Детализация по типам объектов */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="px-5 py-3.5 border-b bg-slate-50/60 flex items-center gap-3 flex-wrap">
+          <h3 className="font-semibold text-sm">Детализация по типам объектов</h3>
+          {selKind ? (
+            <>
+              <Badge variant="outline" style={{ color: DECISION_KINDS[selKind].color, borderColor: DECISION_KINDS[selKind].color + '55', background: DECISION_KINDS[selKind].color + '14' }}>
+                {DECISION_KINDS[selKind].label}
+              </Badge>
+              <button className="text-xs text-muted-foreground hover:text-[#B01E24] underline" onClick={() => setSelKind(null)}>
+                показать все решения
+              </button>
+            </>
+          ) : (
+            <span className="text-[11px] text-muted-foreground">по всем решениям · для детализации выберите вид решения в блоке «Решения по объектам»</span>
+          )}
         </div>
-
-        <div className="bg-white rounded-lg border p-5">
-          <h3 className="font-semibold text-sm mb-4">По типам объектов</h3>
-          <div className="space-y-3.5">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-xs text-slate-500 uppercase tracking-wide">
+              <th className="p-3 w-[130px]">Тип объекта</th>
+              <th className="p-3">Объекты</th>
+              <th className="p-3 w-[70px] text-center">Всего</th>
+              <th className="p-3 w-[110px] text-right">План</th>
+              <th className="p-3 w-[110px] text-right">Освоено</th>
+              <th className="p-3 w-[150px]">Освоение</th>
+              <th className="p-3 w-[100px] text-center">Готовность</th>
+            </tr>
+          </thead>
+          <tbody>
             {byCategory.map((c: any) => (
-              <div key={c.name}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium">{c.name}</span>
-                  <span className="text-muted-foreground">{c.total} · {fmtMoney(c.plan)}</span>
-                </div>
-                <div className="flex h-3.5 rounded overflow-hidden border">
-                  {c.save > 0 && <div className="bg-green-500" style={{ width: `${(c.save / c.total) * 100}%` }} title={`сохранение: ${c.save}`} />}
-                  {c.close > 0 && <div className="bg-red-500" style={{ width: `${(c.close / c.total) * 100}%` }} title={`закрытие: ${c.close}`} />}
-                </div>
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                  <span>сохранение {c.save} · закрытие {c.close}</span>
-                  <span>готовность {c.ready === null ? '—' : `${c.ready}%`} · освоено {pct(c.used, c.plan)}%</span>
-                </div>
-              </div>
+              <tr key={c.name} className="border-b last:border-0">
+                <td className="p-3 font-medium">{c.name}</td>
+                <td className="p-3">
+                  <div className="flex flex-wrap text-xs leading-relaxed">
+                    {c.objs.map((o: RegistryObject, i: number) => (
+                      <span key={o.id}>
+                        <button className="text-slate-600 hover:text-[#B01E24] hover:underline text-left" onClick={() => navigate({ name: 'object', id: o.id })}>{o.name}</button>
+                        {i < c.objs.length - 1 ? <span className="text-slate-300"> · </span> : null}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="p-3 text-center font-semibold">{c.total}</td>
+                <td className="p-3 text-right">{fmtMoney(c.plan)}</td>
+                <td className="p-3 text-right">{fmtMoney(c.used)}</td>
+                <td className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#16a34a] rounded-full" style={{ width: `${pct(c.used, c.plan)}%` }} />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-8">{pct(c.used, c.plan)}%</span>
+                  </div>
+                </td>
+                <td className="p-3 text-center">{c.ready === null ? '—' : `${c.ready}%`}</td>
+              </tr>
             ))}
-            {byCategory.length === 0 && <p className="text-sm text-muted-foreground">Нет объектов в выборке.</p>}
-          </div>
-        </div>
+            {byCategory.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Нет объектов в выборке</td></tr>}
+          </tbody>
+        </table>
       </div>
 
       {/* Муниципалитеты */}
