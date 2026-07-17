@@ -14,7 +14,7 @@ const NAV: { key: View['name']; label: string; icon: React.ElementType; roles: R
   { key: 'registry', label: 'Реестр объектов', icon: ClipboardList, roles: ['coordinator', 'inspector', 'manager'] },
   { key: 'projects', label: 'Проекты', icon: FolderKanban, roles: ['coordinator', 'inspector', 'manager'] },
   { key: 'cabinet', label: 'Личный кабинет', icon: UserRound, roles: ['coordinator', 'inspector', 'manager'] },
-  { key: 'dashboard', label: 'Дашборд', icon: LayoutDashboard, roles: ['manager'] },
+  { key: 'dashboard', label: 'Общая картина', icon: LayoutDashboard, roles: ['coordinator', 'inspector', 'manager'] },
 ];
 
 export function Header() {

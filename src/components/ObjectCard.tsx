@@ -83,6 +83,7 @@ export function ObjectCard({ id }: { id: string }) {
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div><dt className="text-muted-foreground text-xs">Тип работ</dt><dd className="font-medium">{obj.type}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Отрасль</dt><dd className="font-medium">{obj.industry}</dd></div>
+                <div><dt className="text-muted-foreground text-xs">Округ</dt><dd className="font-medium">{obj.district}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Источник</dt><dd className="font-medium">{obj.source === 'external' ? 'ИС «Геопортал МО»' : 'Ручное добавление'}</dd></div>
                 <div><dt className="text-muted-foreground text-xs">Дата поступления</dt><dd className="font-medium">{fmtDate(obj.incomingDate)}</dd></div>
               </dl>

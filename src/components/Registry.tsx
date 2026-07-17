@@ -181,16 +181,19 @@ export function Registry() {
 // ===== Диалог ручного добавления объекта =====
 function AddObjectDialog({ open, onClose, onSubmit }: {
   open: boolean; onClose: () => void;
-  onSubmit: (d: { name: string; type: ObjectType; industry: string; address: string; coords: [number, number]; description: string }) => void;
+  onSubmit: (d: { name: string; type: ObjectType; industry: string; district: string; address: string; coords: [number, number]; description: string }) => void;
 }) {
+  const { objects } = useStore();
+  const districts = [...new Set(objects.map(o => o.district))].sort();
   const [name, setName] = useState('');
   const [type, setType] = useState<ObjectType>('Строительство');
   const [industry, setIndustry] = useState(INDUSTRIES[0]);
+  const [district, setDistrict] = useState('');
   const [address, setAddress] = useState('');
   const [lat, setLat] = useState('55.75');
   const [lon, setLon] = useState('37.61');
   const [description, setDescription] = useState('');
-  const valid = name.trim().length > 3 && address.trim().length > 3 && !isNaN(+lat) && !isNaN(+lon);
+  const valid = name.trim().length > 3 && district.trim().length > 2 && address.trim().length > 3 && !isNaN(+lat) && !isNaN(+lon);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -221,6 +224,13 @@ function AddObjectDialog({ open, onClose, onSubmit }: {
             </div>
           </div>
           <div>
+            <Label>Муниципальный округ *</Label>
+            <Input value={district} onChange={e => setDistrict(e.target.value)} placeholder="Например: г.о. Балашиха" list="districts-list" />
+            <datalist id="districts-list">
+              {districts.map(d => <option key={d} value={d} />)}
+            </datalist>
+          </div>
+          <div>
             <Label>Адрес *</Label>
             <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="г. …, ул. …, …" />
           </div>
@@ -242,7 +252,7 @@ function AddObjectDialog({ open, onClose, onSubmit }: {
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Отмена</Button>
           <Button disabled={!valid} className="bg-[#B01E24] hover:bg-[#8f181d]"
-            onClick={() => onSubmit({ name: name.trim(), type, industry, address: address.trim(), coords: [parseFloat(lat), parseFloat(lon)], description: description.trim() || 'Объект добавлен вручную.' })}>
+            onClick={() => onSubmit({ name: name.trim(), type, industry, district: district.trim(), address: address.trim(), coords: [parseFloat(lat), parseFloat(lon)], description: description.trim() || 'Объект добавлен вручную.' })}>
             Добавить в реестр
           </Button>
         </DialogFooter>
