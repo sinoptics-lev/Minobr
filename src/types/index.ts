@@ -49,6 +49,21 @@ export interface Decision {
   source: string;         // источник финансирования
 }
 
+/** Расширенный паспорт объекта (дополнительные характеристики) */
+export interface ObjectPassport {
+  area?: number;                 // площадь, м²
+  yearBuilt?: number;            // год постройки
+  uin?: string;                  // УИН (уникальный идентификационный номер)
+  meetingDate?: string;          // дата совещания
+  decree?: string;               // постановление главы
+  letterRef?: string;            // реквизиты письма в Минстрой
+  capacityBefore?: string;       // мощность до оптимизации
+  capacityAfter?: string;        // мощность после оптимизации
+  childrenDistribution?: string; // распределение детей
+  closureConditions?: string;    // условия закрытия
+  notes?: string;                // примечания
+}
+
 export interface RegistryObject {
   id: string;
   name: string;
@@ -65,6 +80,7 @@ export interface RegistryObject {
   checks: Check[];
   conclusion?: Conclusion;
   decision?: Decision;       // решение по объекту (после итогового заключения)
+  passport?: ObjectPassport; // расширенные характеристики объекта
   projectId?: string;
 }
 

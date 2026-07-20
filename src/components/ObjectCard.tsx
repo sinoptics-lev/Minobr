@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Camera, CheckCircle2, XCircle, MapPin, CalendarDays, Building2, ClipboardCheck, UserRound, Wallet } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { ArrowLeft, Camera, CheckCircle2, XCircle, MapPin, CalendarDays, Building2, ClipboardCheck, UserRound, Wallet, ChevronDown, Landmark, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useStore } from '@/lib/store';
 import { OBJECT_STATUS, CHECK_STATUS, VEDOMSTVA, DECISION_KINDS, DECISION_GROUPS, FUNDING_SOURCES, fmtDate, fmtMoney, TODAY_STR } from '@/lib/meta';
 import { MapStub } from '@/components/MapStub';
@@ -19,6 +18,7 @@ import type { Check, Verdict, DecisionKind, RegistryObject } from '@/types';
 
 export function ObjectCard({ id }: { id: string }) {
   const { objects, projects, navigate, role } = useStore();
+  const [tab, setTab] = useState('passport');
   const obj = objects.find(o => o.id === id);
   if (!obj) {
     return (
@@ -66,9 +66,9 @@ export function ObjectCard({ id }: { id: string }) {
         </div>
       </div>
 
-      <Tabs defaultValue="checks">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="info">Сведения и карта</TabsTrigger>
+          <TabsTrigger value="passport">Паспорт объекта</TabsTrigger>
           <TabsTrigger value="checks">
             Проверки и заключение
             {obj.checks.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{doneChecks}/{obj.checks.length}</span>}
@@ -76,27 +76,8 @@ export function ObjectCard({ id }: { id: string }) {
           <TabsTrigger value="roadmap">Дорожная карта</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg border p-5 space-y-3">
-              <h3 className="font-semibold">Описание</h3>
-              <p className="text-sm leading-relaxed text-slate-700">{obj.description}</p>
-              <Separator />
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div><dt className="text-muted-foreground text-xs">Тип работ</dt><dd className="font-medium">{obj.type}</dd></div>
-                <div><dt className="text-muted-foreground text-xs">Отрасль</dt><dd className="font-medium">{obj.industry}</dd></div>
-                <div><dt className="text-muted-foreground text-xs">Тип объекта</dt><dd className="font-medium">{obj.category}</dd></div>
-                <div><dt className="text-muted-foreground text-xs">Округ</dt><dd className="font-medium">{obj.district}</dd></div>
-                <div><dt className="text-muted-foreground text-xs">Источник</dt><dd className="font-medium">{obj.source === 'external' ? 'ИС «Геопортал МО»' : 'Ручное добавление'}</dd></div>
-                <div><dt className="text-muted-foreground text-xs">Дата поступления</dt><dd className="font-medium">{fmtDate(obj.incomingDate)}</dd></div>
-              </dl>
-            </div>
-            <div className="bg-white rounded-lg border p-5 space-y-3">
-              <h3 className="font-semibold">Местоположение</h3>
-              <MapStub coords={obj.coords} address={obj.address} />
-              <p className="text-xs text-muted-foreground">Координаты установлены при геоанализе во внешней информационной системе.</p>
-            </div>
-          </div>
+        <TabsContent value="passport" className="mt-4">
+          <PassportTab obj={obj} onGoChecks={() => setTab('checks')} />
         </TabsContent>
 
         <TabsContent value="checks" className="mt-4">
@@ -110,6 +91,202 @@ export function ObjectCard({ id }: { id: string }) {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// ===== Паспорт объекта (по образцу действующей системы) =====
+function PassportTab({ obj, onGoChecks }: { obj: RegistryObject; onGoChecks: () => void }) {
+  const { projects, tasks, navigate } = useStore();
+  const p = obj.passport;
+  const project = projects.find(pr => pr.id === obj.projectId);
+  const objTasks = tasks.filter(t => t.objectId === obj.id);
+  const planEnd = objTasks.length ? objTasks.map(t => t.planEnd).sort()[objTasks.length - 1] : undefined;
+  const doneChecks = obj.checks.filter(c => c.status === 'done').length;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      {/* Левая колонка: реквизиты и сведения */}
+      <div className="lg:col-span-2 space-y-4">
+        {project && (
+          <button onClick={() => navigate({ name: 'project', id: project.id })}
+            className="inline-flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2.5 py-1.5 hover:bg-blue-100 transition-colors">
+            <Landmark className="w-3.5 h-3.5" /> Проект: {project.name}
+          </button>
+        )}
+
+        <div className="bg-white rounded-lg border p-5 space-y-4">
+          <div className="grid md:grid-cols-5 gap-5">
+            <div className="md:col-span-2">
+              <div className="rounded-lg border bg-gradient-to-br from-slate-200 to-slate-300 aspect-[4/3] flex flex-col items-center justify-center text-slate-500 gap-1.5">
+                <Camera className="w-7 h-7" />
+                <span className="text-xs">Фото объекта</span>
+              </div>
+            </div>
+            <div className="md:col-span-3 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm content-start">
+              <PField label="Наименование" value={obj.name} strong wide />
+              <PField label="Адрес" value={obj.address} wide />
+              <PField label="ОМСУ" value={obj.district} />
+              <PField label="Площадь" value={p?.area ? `${p.area.toLocaleString('ru-RU')} м²` : undefined} />
+              <PField label="Тип объекта" value={obj.category} />
+              <PField label="Тип работ" value={obj.type} />
+              <PField label="Отрасль" value={obj.industry} />
+              <PField label="Источник заявки" value={obj.source === 'external' ? 'ИС «Геопортал МО»' : 'Ручное добавление'} />
+              <PField label="Дата поступления" value={fmtDate(obj.incomingDate)} />
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-1.5">Местоположение</div>
+            <MapStub coords={obj.coords} address={obj.address} />
+          </div>
+        </div>
+
+        <CollapsibleSection title="Основная информация" defaultOpen>
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <PField label="Решение" value={obj.decision ? DECISION_KINDS[obj.decision.kind].label : undefined} strong />
+            <PField label="Дата совещания" value={p?.meetingDate ? fmtDate(p.meetingDate) : undefined} />
+            <PField label="Плановая дата завершения" value={planEnd ? fmtDate(planEnd) : undefined} />
+            <PField label="План. сумма финансирования" value={obj.decision ? fmtMoney(obj.decision.planFunding) : undefined} />
+            <PField label="Освоено средств" value={obj.decision ? fmtMoney(obj.decision.usedFunding) : undefined} />
+            <PField label="Источник финансирования" value={obj.decision?.source} />
+            <PField label="Постановление главы" value={p?.decree} />
+            <PField label="Реквизиты письма в Минстрой" value={p?.letterRef} />
+            <PField label="Год постройки" value={p?.yearBuilt ? String(p.yearBuilt) : undefined} />
+            <PField label="УИН" value={p?.uin} />
+            <PField label="Мощность до оптимизации" value={p?.capacityBefore} />
+            <PField label="Мощность после оптимизации" value={p?.capacityAfter} />
+            <PField label="Распределение детей" value={p?.childrenDistribution} />
+            <PField label="Условия закрытия" value={p?.closureConditions} />
+            <PField label="Примечания" value={p?.notes} wide />
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Анализ потребности" defaultOpen>
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Результаты экспресс-анализа</div>
+              <div className="flex gap-3 flex-wrap">
+                {[1, 2].map(n => (
+                  <div key={n} className="w-32 h-24 rounded-lg border bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center text-slate-500 gap-1">
+                    <Camera className="w-5 h-5" />
+                    <span className="text-[10px]">Фото {n}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-700 leading-relaxed mt-3">{obj.description}</p>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Список согласующих</div>
+              {obj.checks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Проверки ещё не назначены — список согласующих определит координатор.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {obj.checks.map(c => (
+                    <span key={c.id} className={`inline-flex items-center text-xs border rounded-full px-2.5 py-1 ${
+                      c.status === 'done'
+                        ? c.verdict === 'agree' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+                        : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}>
+                      {c.vedomstvo}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </CollapsibleSection>
+      </div>
+
+      {/* Правая колонка: заключение и история согласований */}
+      <div className="space-y-4">
+        <div className="bg-white rounded-lg border p-5 space-y-3">
+          {obj.conclusion ? (
+            <>
+              <div className={`rounded-md border px-3 py-2.5 text-sm font-medium ${
+                obj.conclusion.result === 'approved'
+                  ? 'border-green-200 bg-green-50 text-green-800'
+                  : 'border-red-200 bg-red-50 text-red-800'
+              }`}>
+                {obj.conclusion.result === 'approved' ? 'Заключение сформировано: работы согласованы' : 'Заключение сформировано: в работах отказано'}
+              </div>
+              <div className="text-xs text-muted-foreground">Сформировано {fmtDate(obj.conclusion.date)}</div>
+              <Button variant="outline" className="w-full" onClick={onGoChecks}>Открыть проверки</Button>
+            </>
+          ) : (
+            <>
+              <Button className="w-full bg-[#B01E24] hover:bg-[#8f181d]" onClick={onGoChecks} disabled={obj.checks.length === 0}>
+                <FileText className="w-4 h-4 mr-2" /> Сформировать заключение
+              </Button>
+              <div className="text-xs text-muted-foreground text-center">
+                {obj.checks.length === 0
+                  ? 'Недоступно: сначала координатор назначает проверки профильным ведомствам'
+                  : `Завершено проверок: ${doneChecks} из ${obj.checks.length}`}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg border p-5">
+          <h3 className="font-semibold mb-3">История согласований</h3>
+          {obj.checks.length === 0 && !obj.decision ? (
+            <p className="text-sm text-muted-foreground">Согласования ещё не проводились.</p>
+          ) : (
+            <ol className="space-y-2.5">
+              {obj.checks.map((c, i) => {
+                const dot = c.status === 'done'
+                  ? c.verdict === 'agree' ? 'bg-green-500' : 'bg-red-500'
+                  : c.status === 'in_progress' ? 'bg-blue-500' : 'bg-slate-300';
+                const label = c.status === 'done'
+                  ? c.verdict === 'agree' ? 'Согласовано' : 'Не согласовано'
+                  : c.status === 'in_progress' ? 'В работе' : 'Назначено';
+                return (
+                  <li key={c.id} className="flex items-start gap-2.5 text-sm">
+                    <span className="text-muted-foreground w-4 shrink-0 text-right">{i + 1}.</span>
+                    <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dot}`} />
+                    <div className="flex-1">
+                      <div>{label}: {c.vedomstvo}</div>
+                      <div className="text-xs text-muted-foreground">{fmtDate(c.doneDate ?? c.visitDate ?? c.assignedDate)}</div>
+                    </div>
+                  </li>
+                );
+              })}
+              {obj.decision && (
+                <li className="flex items-start gap-2.5 text-sm">
+                  <span className="text-muted-foreground w-4 shrink-0 text-right">{obj.checks.length + 1}.</span>
+                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: DECISION_KINDS[obj.decision.kind].color }} />
+                  <div className="flex-1">
+                    <div>Решение: {DECISION_KINDS[obj.decision.kind].label}</div>
+                    <div className="text-xs text-muted-foreground">{fmtDate(obj.decision.date)}</div>
+                  </div>
+                </li>
+              )}
+            </ol>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PField({ label, value, strong, wide }: { label: string; value?: string; strong?: boolean; wide?: boolean }) {
+  return (
+    <div className={`flex flex-col gap-0.5 ${wide ? 'sm:col-span-2' : ''}`}>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className={`${strong ? 'font-medium' : ''} ${value ? '' : 'text-muted-foreground'}`}>{value ?? '—'}</span>
+    </div>
+  );
+}
+
+function CollapsibleSection({ title, defaultOpen, children }: { title: string; defaultOpen?: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(!!defaultOpen);
+  return (
+    <div className="bg-white rounded-lg border">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-slate-50 rounded-lg transition-colors">
+        <span className="font-semibold">{title}</span>
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="px-5 pb-5">{children}</div>}
     </div>
   );
 }

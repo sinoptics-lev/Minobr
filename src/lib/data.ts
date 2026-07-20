@@ -13,6 +13,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-15',
     description: 'Объект поступил из ИС «Геопортал Московской области» после анализа территории и установления координат. Предполагается строительство новой школы в микрорайоне активной жилой застройки.',
+    passport: { area: 14500, capacityAfter: '1224 места', notes: 'включается в адресную инвестиционную программу' },
     status: 'new',
     checks: [],
   },
@@ -28,6 +29,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-14',
     description: 'Участок выявлен по результатам геоанализа обеспеченности дошкольными учреждениями. Требуется рассмотрение целесообразности строительства.',
+    passport: { area: 3200, capacityAfter: '280 мест' },
     status: 'new',
     checks: [],
   },
@@ -43,6 +45,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-03',
     description: 'Здание 1974 г.п., износ инженерных систем более 60%. Поступило обращение ведомства здравоохранения о необходимости капитального ремонта.',
+    passport: { area: 4100, yearBuilt: 1974, capacityBefore: '900 посещений в сутки', notes: 'износ инженерных систем более 60%' },
     status: 'checking',
     checks: [
       {
@@ -68,6 +71,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-05-20',
     description: 'Капитальный ремонт здания школы с заменой инженерных систем, кровли и фасада. После ремонта планируется перевод учащихся школы № 7.',
+    passport: { area: 9800, yearBuilt: 1968, uin: '503502600001', meetingDate: '2026-06-05', decree: '№ 214-ПГ от 20.06.2026', letterRef: '18Исх-10354/10-03 от 23.06.2026', capacityBefore: '800 мест', capacityAfter: '1000 мест', childrenDistribution: 'приём учащихся школы № 7', notes: 'включаем в ГП Образование' },
     status: 'approved',
     projectId: 'prj-1',
     checks: [
@@ -94,6 +98,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-05-20',
     description: 'После завершения ремонта школы № 5 учащиеся переводятся в отремонтированное здание, здание школы № 7 передаётся на баланс Минимущества МО.',
+    passport: { area: 5400, yearBuilt: 1957, capacityBefore: '600 мест', childrenDistribution: 'перевод учащихся в школу № 5', closureConditions: 'передача здания после завершения ремонта школы № 5', notes: 'здание передаётся на баланс Минимущества МО' },
     status: 'approved',
     projectId: 'prj-1',
     checks: [
@@ -119,6 +124,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-06-01',
     description: 'Реконструкция муниципального стадиона с заменой покрытия и трибун.',
+    passport: { area: 12000, yearBuilt: 1979, closureConditions: 'снос в рамках проекта комплексного развития территории' },
     status: 'rejected',
     checks: [
       { id: 'chk-061', vedomstvo: 'Минспорт МО', assignee: 'Титов С.П.', status: 'done', assignedDate: '2026-06-03', visitDate: '2026-06-10', doneDate: '2026-06-12', photos: [{ id: 'ph-7', label: 'Поле стадиона' }], comment: 'Реконструкция необходима, покрытие изношено.', verdict: 'agree' },
@@ -143,6 +149,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-16',
     description: 'Строительство фельдшерско-акушерского пункта по итогам анализа доступности медицинской помощи в сельских поселениях.',
+    passport: { area: 220, capacityAfter: 'обслуживание 1 200 жителей' },
     status: 'new',
     checks: [],
   },
@@ -158,6 +165,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-06',
     description: 'Здание является объектом культурного наследия регионального значения. Требуется капитальный ремонт с реставрационными работами.',
+    passport: { area: 1800, yearBuilt: 1952, notes: 'объект культурного наследия регионального значения' },
     status: 'checking',
     checks: [
       { id: 'chk-081', vedomstvo: 'Минкультуры МО', assignee: 'Зайцева Л.Д.', status: 'done', assignedDate: '2026-07-07', visitDate: '2026-07-10', doneDate: '2026-07-13', photos: [{ id: 'ph-8', label: 'Фасад ДК' }, { id: 'ph-9', label: 'Лепнина зала' }], comment: 'Работы необходимы, требуется реставрационный проект.', verdict: 'agree' },
@@ -176,6 +184,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'manual',
     incomingDate: '2026-07-12',
     description: 'Объект добавлен вручную по обращению администрации городского округа: требуется пристройка на 300 мест в связи с перегрузкой школы.',
+    passport: { area: 2600, yearBuilt: 1975, capacityAfter: '+300 мест (пристройка)' },
     status: 'new',
     checks: [],
   },
@@ -191,6 +200,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-04-15',
     description: 'Капитальный ремонт терапевтического корпуса с переустройством палат и заменой инженерных систем.',
+    passport: { area: 11200, yearBuilt: 1963, uin: '502801700002', meetingDate: '2026-04-21', decree: '№ 158-ПГ от 06.05.2026', letterRef: '18Исх-08912/10-03 от 30.04.2026', capacityBefore: '240 коек' },
     status: 'approved',
     checks: [
       { id: 'chk-101', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-04-16', visitDate: '2026-04-22', doneDate: '2026-04-25', photos: [{ id: 'ph-10', label: 'Палатное отделение' }], comment: 'Ремонт необходим.', verdict: 'agree' },
@@ -215,6 +225,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-02-10',
     description: 'Ремонт спортивного зала с заменой покрытия и вентиляции по итогам обследования.',
+    passport: { area: 1100, yearBuilt: 1972, meetingDate: '2026-02-26', notes: 'включаем в ГП Образование' },
     status: 'approved',
     checks: [
       { id: 'chk-111', vedomstvo: 'Минобразования МО', assignee: 'Петров И.С.', status: 'done', assignedDate: '2026-02-12', visitDate: '2026-02-25', doneDate: '2026-03-02', photos: [{ id: 'ph-11', label: 'Спортзал' }], comment: 'Работы необходимы.', verdict: 'agree' },
@@ -239,9 +250,10 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-03-02',
     description: 'Строительство пристройки под процедурные кабинеты в связи с ростом прикреплённого населения.',
+    passport: { area: 3900, yearBuilt: 1981, uin: '503402900003', meetingDate: '2026-03-25', capacityAfter: '+350 посещений в смену' },
     status: 'approved',
     checks: [
-      { id: 'chk-121', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-15', doneDate: '2026-03-28', photos: [{ id: 'ph-12', label: 'Участок пристройки' }], comment: 'Потребность подтверждена.', verdict: 'agree' },
+      { id: 'chk-121', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-15', doneDate: '2026-03-28', photos: [{ id: 'ph-12', label: 'Участок пристройки' }], comment: 'Потребность подтверждена.', verdict: 'агree' },
       { id: 'chk-122', vedomstvo: 'Комархитектура МО', assignee: 'Медведева Н.Н.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-18', doneDate: '2026-04-01', photos: [], comment: 'Градостроительное решение возможно.', verdict: 'agree' },
     ],
     conclusion: {
@@ -263,6 +275,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-03-15',
     description: 'Капитальный ремонт здания детского сада 1911 г.п.',
+    passport: { area: 1450, yearBuilt: 1911, closureConditions: 'передача после согласования реставрационного проекта', notes: 'выявленный объект культурного наследия' },
     status: 'rejected',
     checks: [
       { id: 'chk-131', vedomstvo: 'Минобразования МО', assignee: 'Петров И.С.', status: 'done', assignedDate: '2026-03-18', visitDate: '2026-03-30', doneDate: '2026-04-05', photos: [], comment: 'Ремонт необходим, учреждение перегружено.', verdict: 'agree' },
@@ -287,6 +300,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-04-05',
     description: 'Строительство физкультурно-оздоровительного комплекса с бассейном в микрорайоне новой застройки.',
+    passport: { area: 7200, uin: '503401400004', meetingDate: '2026-04-30', decree: '№ 96-ПГ от 18.05.2026', capacityAfter: '600 посетителей в день' },
     status: 'approved',
     checks: [
       { id: 'chk-141', vedomstvo: 'Минспорт МО', assignee: 'Титов С.П.', status: 'done', assignedDate: '2026-04-07', visitDate: '2026-04-20', doneDate: '2026-04-25', photos: [], comment: 'Потребность подтверждена.', verdict: 'agree' },
@@ -311,6 +325,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-05-11',
     description: 'Капитальный ремонт с заменой оконных блоков и системы отопления.',
+    passport: { area: 8600, yearBuilt: 1976, meetingDate: '2026-06-01', capacityBefore: '900 мест', notes: 'включаем в ГП Образование' },
     status: 'approved',
     checks: [
       { id: 'chk-151', vedomstvo: 'Минобразования МО', assignee: 'Петров И.С.', status: 'done', assignedDate: '2026-05-13', visitDate: '2026-05-25', doneDate: '2026-05-30', photos: [], comment: 'Работы необходимы.', verdict: 'agree' },
@@ -335,6 +350,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-06-02',
     description: 'Ремонт приёмного отделения с переустройством смотровых кабинетов.',
+    passport: { area: 5400, yearBuilt: 1970 },
     status: 'checking',
     checks: [
       { id: 'chk-161', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-06-04', visitDate: '2026-06-12', doneDate: '2026-06-15', photos: [], comment: 'Ремонт необходим.', verdict: 'agree' },
@@ -354,6 +370,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-06-12',
     description: 'Реставрация фасада и ремонт зрительного зала.',
+    passport: { area: 1600, yearBuilt: 1948, notes: 'реставрация по согласованному проекту' },
     status: 'approved',
     checks: [
       { id: 'chk-171', vedomstvo: 'Минкультуры МО', assignee: 'Зайцева Л.Д.', status: 'done', assignedDate: '2026-06-15', visitDate: '2026-06-22', doneDate: '2026-06-25', photos: [], comment: 'Работы необходимы.', verdict: 'agree' },
@@ -378,6 +395,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-06-20',
     description: 'Строительство новой школы в микрорайоне активной жилой застройки.',
+    passport: { area: 15800, capacityAfter: '1500 мест' },
     status: 'checking',
     checks: [
       { id: 'chk-181', vedomstvo: 'Минобразования МО', assignee: 'Петров И.С.', status: 'done', assignedDate: '2026-06-23', visitDate: '2026-07-01', doneDate: '2026-07-05', photos: [], comment: 'Строительство необходимо, школы микрорайона перегружены.', verdict: 'agree' },
@@ -397,6 +415,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'external',
     incomingDate: '2026-07-01',
     description: 'Строительство фельдшерско-акушерского пункта по итогам анализа доступности медпомощи.',
+    passport: { area: 210, capacityAfter: 'обслуживание 900 жителей' },
     status: 'new',
     checks: [],
   },
@@ -412,6 +431,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     source: 'manual',
     incomingDate: '2026-07-08',
     description: 'Объект добавлен вручную по обращению администрации округа: ремонт трибун и беговых дорожек.',
+    passport: { area: 9800, yearBuilt: 1966 },
     status: 'new',
     checks: [],
   },
