@@ -253,7 +253,7 @@ export const DEMO_OBJECTS: RegistryObject[] = [
     passport: { area: 3900, yearBuilt: 1981, uin: '503402900003', meetingDate: '2026-03-25', capacityAfter: '+350 посещений в смену' },
     status: 'approved',
     checks: [
-      { id: 'chk-121', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-15', doneDate: '2026-03-28', photos: [{ id: 'ph-12', label: 'Участок пристройки' }], comment: 'Потребность подтверждена.', verdict: 'агree' },
+      { id: 'chk-121', vedomstvo: 'Минздрав МО', assignee: 'Сидорова Е.М.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-15', doneDate: '2026-03-28', photos: [{ id: 'ph-12', label: 'Участок пристройки' }], comment: 'Потребность подтверждена.', verdict: 'agree' },
       { id: 'chk-122', vedomstvo: 'Комархитектура МО', assignee: 'Медведева Н.Н.', status: 'done', assignedDate: '2026-03-04', visitDate: '2026-03-18', doneDate: '2026-04-01', photos: [], comment: 'Градостроительное решение возможно.', verdict: 'agree' },
     ],
     conclusion: {
